@@ -1,0 +1,25 @@
+
+.header {
+  .header-nav {
+    .nav-blocks {
+      padding: 10px 15px;
+      background-color: $white;
+      color: $gray-600;
+      font-weight: 700;
+      text-wrap: nowrap;
+    
+      + .active {
+        background-color: $cyan-700;
+        color: $white;
+      }
+    }
+
+    .nav-links {
+      border-radius: $radius;
+
+      .nav-blocks {
+        margin-right: 2px;
+      }
+    }
+  }
+}
