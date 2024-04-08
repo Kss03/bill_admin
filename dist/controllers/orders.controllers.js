@@ -22,12 +22,79 @@ class OrdersController {
     createOrder(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let { rate_id, discount, table_number, people_number, opened } = req.body;
+                let { rate_id, discount, table_number, people_number, opened, comment, order_cost, time_cost, product_cost, status } = req.body;
+                if (!status)
+                    status = 'open';
                 if (!discount)
                     discount = 0;
                 if (!people_number)
                     people_number = 1;
-                const { rows } = yield db_1.default.query('INSERT INTO orders (status, opened, rate_id, discount, table_number, people_number) VALUES ($1, $6, $2, $3, $4, $5) returning *', ['open', rate_id, discount, table_number, people_number, opened]);
+                if (!order_cost)
+                    order_cost = 0;
+                if (!time_cost)
+                    time_cost = 0;
+                if (!product_cost)
+                    product_cost = 0;
+                typeof product_cost;
+                const { rows } = yield db_1.default.query(`INSERT INTO orders (
+                    status, 
+                    rate_id, 
+                    discount, 
+                    table_number, 
+                    people_number, 
+                    opened, 
+                    comment, 
+                    order_cost,
+                    time_cost,
+                    product_cost) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *`, [
+                    status,
+                    rate_id,
+                    discount,
+                    table_number,
+                    people_number,
+                    opened,
+                    comment,
+                    order_cost,
+                    time_cost,
+                    product_cost
+                ]);
+                res.json(rows);
+            }
+            catch (e) {
+                res.json(e);
+            }
+        });
+    }
+    addProductToOrder(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { order_id, product_id, number } = req.body;
+                // SQL function in "model" file
+                const { rows } = yield db_1.default.query(`
+        SELECT update_or_insert_ordered_products($1, $2, $3);
+      `, [order_id, product_id, number]);
+                res.json(rows);
+            }
+            catch (e) {
+                console.log(e);
+                res.json(e);
+            }
+        });
+    }
+    getOrderedProducts(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { id } = req.params;
+                const { rows } = yield db_1.default.query(`
+        SELECT
+            ordered_products.order_id,
+            ordered_products.product_id,
+            ordered_products.number,
+            product.name,
+            product.barcode,
+            product.price
+        FROM ordered_products, product WHERE ordered_products.order_id = $1 AND ordered_products.product_id = product.id;
+      `, [id]);
                 res.json(rows);
             }
             catch (e) {
@@ -38,8 +105,14 @@ class OrdersController {
     getAllOrders(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                if (req.query.status) {
+                    const { rows } = yield db_1.default.query('SELECT * FROM orders WHERE status = $1', [req.query.status]);
+                    res.json(rows);
+                    return;
+                }
                 const { rows } = yield db_1.default.query('SELECT * FROM orders');
                 res.json(rows);
+                return;
             }
             catch (e) {
                 res.json(new db_errors_1.default(e.code, e.detail));
@@ -50,8 +123,27 @@ class OrdersController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { id } = req.params;
-                const { rows } = yield db_1.default.query('SELECT * FROM orders WHERE id = $1', [id]);
-                res.json(rows);
+                const { rows } = yield db_1.default.query(`
+        SELECT 
+            orders.id, 
+            orders.status, 
+            orders.opened, 
+            orders.closed, 
+            orders.duration, 
+            orders.rate_id, 
+            orders.discount, 
+            orders.table_number, 
+            orders.people_number, 
+            orders.order_cost, 
+            orders.product_cost,
+            orders.time_cost,
+            orders.comment, 
+            orders.pay_method,
+            rates.name AS rate_name, 
+            rates.price AS rate_price
+        FROM orders, rates WHERE orders.id = $1 AND orders.rate_id = rates.id;
+      `, [id]);
+                res.json(rows[0]);
             }
             catch (e) {
                 res.json(new db_errors_1.default(e.code, e.detail));
@@ -77,7 +169,7 @@ class OrdersController {
     closeOrder(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let { id, closed, duration, rate_id, discount, table_number, people_number, order_cost } = req.body;
+                let { id, closed, duration, rate_id, discount, table_number, people_number, order_cost, time_cost, product_cost, pay_method } = req.body;
                 const { rows } = yield db_1.default.query(`
         UPDATE orders SET status = 'closed',
             closed = $1, 
@@ -86,7 +178,22 @@ class OrdersController {
             discount = $4, 
             table_number = $5,
             people_number = $6,
-            order_cost = $7 WHERE id = $8 RETURNING *`, [closed, duration, rate_id, discount, table_number, people_number, order_cost, id]);
+            order_cost = $7,
+            time_cost = $8,
+            product_cost = $9,
+            pay_method = $10 WHERE id = $11 RETURNING *`, [
+                    closed,
+                    duration,
+                    rate_id,
+                    discount,
+                    table_number,
+                    people_number,
+                    order_cost,
+                    time_cost,
+                    product_cost,
+                    pay_method,
+                    id
+                ]);
                 res.json(rows[0]);
             }
             catch (e) {

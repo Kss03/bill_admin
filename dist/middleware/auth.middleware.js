@@ -9,16 +9,20 @@ function default_1(req, res, next) {
         next();
     }
     try {
+        if (!req.headers.authorization) {
+            return res.status(400).json({ message: "User Not Authorized!" });
+        }
         const token = req.headers.authorization.split(" ")[1]; // Bearer asdasdasdasd
         if (!token) {
-            return res.status(400).json({ message: "User Not Authorized" });
+            return res.status(400).json({ message: "User Not Authorized!!" });
         }
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     }
     catch (e) {
-        res.status(400).json({ message: "User Not Authorized" });
+        console.log(e);
+        res.status(400).json(e.message);
     }
 }
 exports.default = default_1;

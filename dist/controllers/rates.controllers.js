@@ -20,10 +20,10 @@ class RatesController {
             try {
                 const { name, price } = req.body;
                 const { rows } = yield db_1.default.query(`INSERT INTO rates (name, price) VALUES ($1, $2) RETURNING *`, [name, price]);
-                res.json(rows);
+                res.status(200).json(rows);
             }
             catch (e) {
-                res.json(new db_errors_1.default(e.code, e.detail));
+                res.status(400).json(e.detail);
             }
         });
     }

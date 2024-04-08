@@ -5,11 +5,10 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import {validationResult} from 'express-validator'
 import db from "../db/db";
-import dbError from "../errors/db.errors";
 
 const generateJwt = (login: string, role: string) => {
 	const payload = {
-		username: login,
+		login: login,
 		role: role,
 	};
 	return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "24h" });
@@ -37,7 +36,6 @@ class AuthController {
 
 	async login(req: any, res: any, next: any) {
 		try {
-			console.log(req.body);
 			const { login, password } = req.body;
 			const { rows } = await db.query(
 				`SELECT login, password, name AS role_name FROM users, role
@@ -45,20 +43,26 @@ class AuthController {
 				[login]
 			);
 			if (rows.length === 0) {
-				return next(ApiError.badRequest("User with this name does not exist"));
+				res.status(400).json({message: "User with this name does not exist"});
+				return
 			}
 			const user = rows[0];
 			const validPassword = bcrypt.compareSync(password, user.password);
 			if (!validPassword) {
-				return next(ApiError.badRequest("wrong password"));
+				res.status(400).json({message: "wrong password"});
+				return
 			}
 			if (user.role_name != "ADMIN") {
-				return next(ApiError.badRequest("no access rights"));
+				res.status(400).json({message: "no access rights"});
+				return
 			}
-			const token = generateJwt(user.login, user.role);
-			return res.status(200).json({ token });
+			const token = generateJwt(user.login, user.role_name);
+			res.status(200).json({token, message: "success"})
+			return
 		} catch (e: any) {
-			next(ApiError.badRequest(e.message));
+			console.log(e)
+			res.json(ApiError.badRequest(e))
+			return
 		}
 	}
 

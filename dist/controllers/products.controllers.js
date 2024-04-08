@@ -18,9 +18,10 @@ class ProductsController {
     createProduct(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { name, category_id, quantity, price } = req.body;
-                console.log(name, category_id, quantity, price);
-                const { rows } = yield db_1.default.query(`INSERT INTO product (name, category_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *`, [name, category_id, quantity, price]);
+                let { name, category_id, quantity, price, barcode } = req.body;
+                if (!quantity)
+                    quantity = 0;
+                const { rows } = yield db_1.default.query(`INSERT INTO product (name, category_id, quantity, price, barcode) VALUES ($1, $2, $3, $4, $5) RETURNING *`, [name, category_id, quantity, price, barcode]);
                 res.json(rows);
             }
             catch (e) {
@@ -31,7 +32,7 @@ class ProductsController {
     getAllProducts(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { rows } = yield db_1.default.query(`SELECT * FROM product`);
+                const { rows } = yield db_1.default.query(`SELECT product.id AS id, product.name AS name, barcode, category_id, quantity, price, product_category.name AS category_name FROM product, product_category WHERE product.category_id = product_category.id`);
                 res.json(rows);
             }
             catch (e) {
@@ -70,10 +71,10 @@ class ProductsController {
             try {
                 const { id } = req.query;
                 const { rows } = yield db_1.default.query('DELETE FROM product WHERE id = $1 RETURNING *', [id]);
-                res.json(rows[0]);
+                res.status(200).json(rows[0]);
             }
             catch (e) {
-                res.json(new db_errors_1.default(e.code, e.detail));
+                res.status(400).json(new db_errors_1.default(e.code, e.detail));
             }
         });
     }

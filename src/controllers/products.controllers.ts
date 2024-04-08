@@ -5,9 +5,9 @@ import dbError from "../errors/db.errors";
 class ProductsController {
   async createProduct(req: any, res: any) {
     try {
-      const {name, category_id, quantity, price} = req.body
-      console.log(name, category_id, quantity, price)
-      const {rows} = await db.query(`INSERT INTO product (name, category_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *`, [name, category_id, quantity, price])
+      let {name, category_id, quantity, price, barcode} = req.body
+      if (!quantity) quantity = 0
+      const {rows} = await db.query(`INSERT INTO product (name, category_id, quantity, price, barcode) VALUES ($1, $2, $3, $4, $5) RETURNING *`, [name, category_id, quantity, price, barcode])
       res.json(rows)
     } catch (e: any) {
       res.json(new dbError(e.code, e.detail))
@@ -15,7 +15,7 @@ class ProductsController {
   }
   async getAllProducts(req: any, res: any) {
     try {
-      const {rows} = await db.query(`SELECT * FROM product`)
+      const {rows} = await db.query(`SELECT product.id AS id, product.name AS name, barcode, category_id, quantity, price, product_category.name AS category_name FROM product, product_category WHERE product.category_id = product_category.id`)
       res.json(rows)
     } catch (e: any) {
       res.json(new dbError(e.code, e.detail))
@@ -45,9 +45,9 @@ class ProductsController {
     try {
       const {id} = req.query
       const {rows} = await db.query('DELETE FROM product WHERE id = $1 RETURNING *', [id])
-      res.json(rows[0])
+      res.status(200).json(rows[0])
     } catch (e: any) {
-      res.json(new dbError(e.code, e.detail))
+      res.status(400).json(new dbError(e.code, e.detail))
     }
   }
 }

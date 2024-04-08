@@ -19,7 +19,7 @@ const express_validator_1 = require("express-validator");
 const db_1 = __importDefault(require("../db/db"));
 const generateJwt = (login, role) => {
     const payload = {
-        username: login,
+        login: login,
         role: role,
     };
     return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
@@ -47,26 +47,31 @@ class AuthController {
     login(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log(req.body);
                 const { login, password } = req.body;
                 const { rows } = yield db_1.default.query(`SELECT login, password, name AS role_name FROM users, role
 				WHERE login = $1 AND users.role = role.id;`, [login]);
                 if (rows.length === 0) {
-                    return next(api_errors_1.default.badRequest("User with this name does not exist"));
+                    res.status(400).json({ message: "User with this name does not exist" });
+                    return;
                 }
                 const user = rows[0];
                 const validPassword = bcryptjs_1.default.compareSync(password, user.password);
                 if (!validPassword) {
-                    return next(api_errors_1.default.badRequest("wrong password"));
+                    res.status(400).json({ message: "wrong password" });
+                    return;
                 }
                 if (user.role_name != "ADMIN") {
-                    return next(api_errors_1.default.badRequest("no access rights"));
+                    res.status(400).json({ message: "no access rights" });
+                    return;
                 }
-                const token = generateJwt(user.login, user.role);
-                return res.status(200).json({ token });
+                const token = generateJwt(user.login, user.role_name);
+                res.status(200).json({ token, message: "success" });
+                return;
             }
             catch (e) {
-                next(api_errors_1.default.badRequest(e.message));
+                console.log(e);
+                res.json(api_errors_1.default.badRequest(e));
+                return;
             }
         });
     }
