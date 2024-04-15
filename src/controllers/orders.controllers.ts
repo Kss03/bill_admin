@@ -1,6 +1,6 @@
 
 import db from '../db/db'
-import dbError from "../errors/db.errors";
+import dbError from "../Errors/db.errors";
 import {query} from "express";
 
 class OrdersController {

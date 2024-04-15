@@ -1,6 +1,6 @@
 
 import db from '../db/db'
-import dbError from "../errors/db.errors";
+import dbError from "../Errors/db.errors";
 
 class ProductsController {
   async createProduct(req: any, res: any) {

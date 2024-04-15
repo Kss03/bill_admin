@@ -1,6 +1,6 @@
 
 import jwt from "jsonwebtoken";
-import ApiError from "../errors/api.errors";
+import ApiError from "../Errors/api.errors";
 
 export default function (req: any, res: any, next: any) {
 	if (req.method === "OPTIONS") {

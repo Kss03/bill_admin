@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../db/db"));
-const db_errors_1 = __importDefault(require("../errors/db.errors"));
+const db_errors_1 = __importDefault(require("../Errors/db.errors"));
 class OrdersController {
     constructor() {
         this.orderOpen = 'open';

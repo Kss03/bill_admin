@@ -1,6 +1,6 @@
 
 import db from '../db/db'
-import dbError from '../errors/db.errors'
+import dbError from '../Errors/db.errors'
 
 class RatesController {
   async createRate(req: any, res: any) {

@@ -1,6 +1,6 @@
 
 import uuid from 'uuid'
-import ApiError from '../errors/api.errors'
+import ApiError from '../Errors/api.errors'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import {validationResult} from 'express-validator'
